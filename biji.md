@@ -1,3 +1,21 @@
+# 一些std库函数的总结
+
+std::function: 可以定义入口参数和返回参数确定的函数，同时可以满足lambda函数需要捕获时的定义
+
+std::time:返回类型std::time_t,std::time 获取的时间戳是纯数字，需通过 std::ctime 或 std::localtime 转换为「年 / 月 / 日 / 时 / 分 / 秒」格式
+
+std:atomatic:原子操作，不可中断
+
+std::string: 字符串，支持遍历，查找，添加等操作
+
+std::bind：“固定”函数的某些参数，返回一个新的函数对象，调用该函数只需要传入未绑定的参数即可
+
+std::mutex:互斥锁
+
+std::recursive_mutex:递归锁
+
+std::timed_mutex：超时锁
+
 # Basic C++基础工具类
 
 ## noncopuable.h
@@ -39,7 +57,6 @@ time()：返回秒级时间戳
 
 静态工厂方法：静态工厂方法是面向对象设计模式中「创建型模式」的一种简化实现（区别于完整的 “工厂方法模式”），核心是通过类的 static 成员函数创建并返回类的实例，而非直接通过构造函数 new/() 创建。（可以用这个方式限制全局单例）
 
-
 ## CurrentThread.h
 
 extern 跨文件全局变量
@@ -58,11 +75,49 @@ sem_t: 与互斥锁相像，信号量的值是一个非负整数（>=0），表�
 
 Lambda函数：[&]以引用的方式捕获当前作用域外所有的变量
 
+## Callbacks.h
+
+传入参数的类型：1）const TcpConnectionPtr&，引用传递：避免 shared_ptr 拷贝（拷贝会触发引用计数 + 1/-1，有开销），没有const的话能修改原始对象（修改别名 = 修改原对象）
+
+2）Buffer*， 指针传递：Buffer 是 TcpConnection 内部成员，生命周期由 TcpConnection 管理（回调期间连接必然存活），无需拷贝；没有const的话能修改原始对象（通过指针解引用修改原对象）
+
+3）TimeStamp， 值传递：TimeStamp 是轻量级对象（通常仅一个 int64_t 成员），拷贝开销可忽略，没有const的话也不能修改原始对象（修改拷贝≠修改原对象）
+
 # 缓冲区与数据读写
 
 ## Buffer.h
 
 用长度前缀法解决TCP通信的粘包问题（prependable byte）
+
+# 网络底层源语
+
+## InetAddress.h
+
+sockaddr_in:表示IPv4 套接字地址的结构体，定义在 <netinet/in.h> 头文件中，是网络编程中处理 TCP/UDP 地址的核心结构体
+<arpa/inet.h> 包含 inet_pton/inet_ntop 等转换函数
+
+```
+
+struct sockaddr_in {
+    sa_family_t    sin_family;   // 地址族（必须为 AF_INET，表示IPv4）
+    in_port_t      sin_port;     // 端口号（网络字节序，16位）
+    struct in_addr sin_addr;     // IPv4 地址（32位）
+    char           sin_zero[8];  // 填充字段，使结构体大小与 sockaddr 一致
+};
+
+struct sockaddr {
+    sa_family_t sa_family;  // 地址族（AF_INET/AF_INET6 等）
+    char        sa_data[14];// 地址数据（包含端口+IP，格式不直观）
+};
+
+```
+
+
+
+
+
+
+
 
 
 
